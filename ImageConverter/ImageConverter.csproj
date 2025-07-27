@@ -11,7 +11,6 @@
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="14.7.0" />
     <PackageReference Include="Magick.NET.Core" Version="14.7.0" />
-    <PackageReference Include="Magick.NET.SystemDrawing" Version="8.0.7" />
     <PackageReference Include="NLog" Version="6.0.2" />
   </ItemGroup>
 
