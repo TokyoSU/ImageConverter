@@ -1,29 +1,13 @@
 using ImageMagick;
-using Microsoft.VisualBasic.Logging;
 using NLog;
 using System.ComponentModel;
 
 namespace ImageConverter
 {
-    public struct ImageStorage
-    {
-        public string FileName { get; set; }
-
-        public ImageStorage()
-        {
-            FileName = string.Empty;
-        }
-
-        public ImageStorage(string fileName)
-        {
-            FileName = fileName;
-        }
-    }
-
     public partial class ConverterForm : Form
     {
         private static readonly Logger _Log = LogManager.GetCurrentClassLogger();
-        private readonly List<ImageStorage> _ImageStorages = [];
+        private readonly List<string> _FilePathList = [];
         private static IEnumerable<string> MagickNetSupportedFormats
         {
             get
@@ -104,12 +88,12 @@ namespace ImageConverter
             if (SelectFolderImage.ShowDialog() == DialogResult.OK)
             {
                 var fileName = SelectFolderImage.FileName;
-                if (File.Exists(fileName) && !_ImageStorages.Any(s => s.FileName.Equals(fileName, StringComparison.InvariantCultureIgnoreCase)))
-                    _ImageStorages.Add(new ImageStorage(fileName));
+                if (File.Exists(fileName) && !_FilePathList.Any(s => s.Equals(fileName, StringComparison.InvariantCultureIgnoreCase)))
+                    _FilePathList.Add(fileName);
                 else
                     _Log.Error($"{fileName} does not exist or is already in the list.");
-                _ProgressMaxValue = _ImageStorages.Count;
-                ImageCountStr.Text = _ImageStorages.Count.ToString();
+                _ProgressMaxValue = _FilePathList.Count;
+                ImageCountStr.Text = _FilePathList.Count.ToString();
                 ProcessedCountStr.Text = $"{_ProgressValue} of {_ProgressMaxValue}";
             }
         }
@@ -124,13 +108,13 @@ namespace ImageConverter
             {
                 foreach (var fileName in SelectFolderImage.FileNames)
                 {
-                    if (File.Exists(fileName) && !_ImageStorages.Any(s => s.FileName.Equals(fileName, StringComparison.InvariantCultureIgnoreCase)))
-                        _ImageStorages.Add(new ImageStorage(fileName));
+                    if (File.Exists(fileName) && !_FilePathList.Any(s => s.Equals(fileName, StringComparison.InvariantCultureIgnoreCase)))
+                        _FilePathList.Add(fileName);
                     else
                         _Log.Error($"{fileName} does not exist or is already in the list.");
                 }
-                _ProgressMaxValue = _ImageStorages.Count;
-                ImageCountStr.Text = _ImageStorages.Count.ToString();
+                _ProgressMaxValue = _FilePathList.Count;
+                ImageCountStr.Text = _FilePathList.Count.ToString();
                 ProcessedCountStr.Text = $"{_ProgressValue} of {_ProgressMaxValue}";
             }
         }
@@ -144,7 +128,7 @@ namespace ImageConverter
                 return;
             }
 
-            Parallel.ForEach(_ImageStorages, (storage) =>
+            Parallel.ForEach(_FilePathList, (storage) =>
             {
                 if (ConverterWorker.CancellationPending)
                 {
@@ -154,18 +138,17 @@ namespace ImageConverter
 
                 try
                 {
-                    using var result = new MagickImage(storage.FileName);
+                    using var result = new MagickImage(storage);
                     result.Format = GetSelectedFormat();
-                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(storage.FileName);
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(storage);
                     var fileName = $"{fileNameWithoutExt}.{GetFormatByName(GetSelectedFormat())}";
                     var filePath = _DestionationFolder + "\\" + fileName;
-                    _Log.Debug($"Converting {storage.FileName} to {filePath} with format {GetSelectedFormat()}");
+                    _Log.Debug($"Converting {storage} to {filePath} with format {GetSelectedFormat()}");
                     result.Write(filePath);
                 }
                 catch (Exception ex)
                 {
-                    // Handle exceptions (e.g., log them)
-                    _Log.Error(ex, $"Error processing {storage.FileName}");
+                    _Log.Error(ex, $"Error processing {storage}");
                 }
 
                 ConverterWorker.ReportProgress(_ProgressValue++);
@@ -204,6 +187,15 @@ namespace ImageConverter
                     SelectFolderStr.Text = "No folder selected";
                 }
             }
+        }
+
+        private void ClearList_Click(object sender, EventArgs e)
+        {
+            _FilePathList.Clear();
+            _ProgressValue = 0;
+            _ProgressMaxValue = 0;
+            ImageCountStr.Text = _FilePathList.Count.ToString();
+            ProcessedCountStr.Text = $"{_ProgressValue} of {_ProgressMaxValue}";
         }
     }
 }

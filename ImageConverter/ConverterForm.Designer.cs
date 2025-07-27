@@ -44,6 +44,7 @@
             SelectFolderStr = new Label();
             label3 = new Label();
             ProcessedCountStr = new Label();
+            ClearList = new Button();
             SuspendLayout();
             // 
             // SelectImage
@@ -180,11 +181,22 @@
             ProcessedCountStr.TabIndex = 13;
             ProcessedCountStr.Text = "0 of 0";
             // 
+            // ClearList
+            // 
+            ClearList.Location = new Point(245, 112);
+            ClearList.Name = "ClearList";
+            ClearList.Size = new Size(75, 23);
+            ClearList.TabIndex = 14;
+            ClearList.Text = "Clear";
+            ClearList.UseVisualStyleBackColor = true;
+            ClearList.Click += ClearList_Click;
+            // 
             // ConverterForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(600, 143);
+            Controls.Add(ClearList);
             Controls.Add(ProcessedCountStr);
             Controls.Add(label3);
             Controls.Add(SelectFolderStr);
@@ -225,5 +237,6 @@
         private Label SelectFolderStr;
         private Label label3;
         private Label ProcessedCountStr;
+        private Button ClearList;
     }
 }
